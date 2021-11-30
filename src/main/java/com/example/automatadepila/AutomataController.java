@@ -10,8 +10,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -109,9 +107,7 @@ public class AutomataController implements Initializable {
     }
 
     private void drawDiagram(){
-        Circle stateS = new Circle(10, Color.WHITE);
-        stateS.setStrokeWidth(2);
-        
+        new Diagrama(canva);
     }
 
     @Override

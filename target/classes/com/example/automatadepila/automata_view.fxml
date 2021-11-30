@@ -33,7 +33,7 @@
                <TableColumn fx:id="pilaColumn" prefWidth="76.0" text="Pila" />
            </columns>
          </TableView>
-         <Canvas fx:id="canva" height="200.0" width="302.0" />
+         <Canvas fx:id="canva" height="200.0" width="300.0" />
       </children></HBox>
    <Label fx:id="resultLabel" />
    <HBox fx:id="controlButtons" alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0">
