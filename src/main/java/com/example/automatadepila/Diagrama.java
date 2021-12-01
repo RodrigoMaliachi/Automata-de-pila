@@ -170,7 +170,7 @@ public class Diagrama {
             if (counter == 0)
                 writePileValue("", Color.BLACK);
             else
-                writePileValue(transitions.get(counter).getPila(), Color.BLACK);
+                writePileValue(transitions.get(counter-1).getPila(), Color.BLACK);
 
         });
 
@@ -187,7 +187,7 @@ public class Diagrama {
             cleanUpObject(Eraser.PILE);
             writePileValue(transitions.get(counter).getPila(), Color.BLACK);
 
-            if (transitions.get(counter).getEstado().equals("S") || counter == transitions.size()/2 ) {
+            if (transitions.get(counter).getEstado().equals("S") || counter == transitions.size()/2 - 1) {
                 cleanUpObject(Eraser.STATE_S);
                 drawStateS(Color.BLUE);
                 drawTransitionLineS(Color.BLACK);
@@ -211,10 +211,12 @@ public class Diagrama {
                 default -> Eraser.NULL;
             };
 
-            if (counter == transitions.size() / 2)
+            if (counter == transitions.size() / 2 - 1)
                 lastTransition = Eraser.EMPTY_TRANSITION;
-
-            redrawTransition(lastTransition, Color.BLUE);
+            if (counter != transitions.size() - 1)
+                redrawTransition(lastTransition, Color.BLUE);
+            else
+                redrawTransition(lastTransition, Color.BLACK);
 
             if (++counter >= transitions.size()) {
                 counter = 0;
@@ -256,6 +258,10 @@ public class Diagrama {
                 drawTransitionLineS(Color.BLACK);
                 drawTransitionStoF(paint);
             }
+            case NULL -> {
+                drawStateF(paint);
+                drawTransitionLineF(paint);
+            }
         }
     }
 
@@ -269,7 +275,7 @@ public class Diagrama {
                 gc.clearRect(pad + 1, pad + hS - 65, wS - 2, 25);
             }
             case STATE_S -> gc.clearRect(pad + 20,pad + hS/2 - cD, cD, 3*cD/2 );
-            case STATE_F -> gc.clearRect(pad + wS - 3*cD/4 - 20,pad + hS/2 - cD, cD, 3*cD/2 );
+            case NULL, STATE_F -> gc.clearRect(pad + wS - 3*cD/4 - 20,pad + hS/2 - cD, cD, 3*cD/2 );
             case TRANSITION_A_S -> {
                 cleanUpObject(Eraser.STATE_S);
                 gc.clearRect(pad + 5, pad + hS/2 - 55, 30, 25);

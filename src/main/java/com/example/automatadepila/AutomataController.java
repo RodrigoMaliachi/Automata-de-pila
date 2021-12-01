@@ -69,6 +69,7 @@ public class AutomataController implements Initializable {
         transitions.clear();
         transitions.add(new Estado("S","\u03B5","\u03B5"));
         transitions.add(new Estado("F","\u03B5","\u03B5"));
+        animateDiagram();
     }
 
     private void addTransitionsToTable(String cadena) {
