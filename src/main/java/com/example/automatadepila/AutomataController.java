@@ -5,13 +5,12 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 
 import java.net.URL;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class AutomataController implements Initializable {
@@ -34,13 +33,20 @@ public class AutomataController implements Initializable {
     private Canvas canva;
 
     @FXML
+    private Button outButton;
+
+    private Diagrama diagrama;
+
+    @FXML
     protected void onContinueButtonClick() {
         String cadena = cadenaTextField.getText();
         resultLabel.setText("");
         cadenaTextField.setText("");
 
+        cadena = cadena.toLowerCase(Locale.ROOT);
+
         if (cadena.isEmpty()) {
-            resultLabel.setText("La cadena está vacía");
+            emptyEntry();
             return;
         }
 
@@ -56,18 +62,27 @@ public class AutomataController implements Initializable {
             return;
         }
 
-        automata(cadena);
+        addTransitionsToTable(cadena);
     }
 
-    private void automata(String cadena) {
+    private void emptyEntry() {
+        transitions.clear();
+        transitions.add(new Estado("S","\u03B5","\u03B5"));
+        transitions.add(new Estado("F","\u03B5","\u03B5"));
+    }
+
+    private void addTransitionsToTable(String cadena) {
 
         int length = cadena.length();
         String pila = "";
 
+        //Liberamos la tabla de valores previos
         transitions.clear();
 
+        //Añadimos el estado inicial del autómata
         transitions.add(new Estado("S",cadena, "\u03B5"));
 
+        //Añadimos las transiciones del estado S
         for (int i = 0; i < length/2; i++) {
 
             if ( cadena.charAt(i) == 'a' ) {
@@ -78,8 +93,10 @@ public class AutomataController implements Initializable {
             transitions.add(new Estado("S", cadena.substring(i + 1), pila));
         }
 
+        //Añadimos la transición de S a F
         transitions.add(new Estado("F", cadena.substring(length/2), pila));
 
+        //Añadimos las transiciones del estado F
         for (int i = length/2; i < length; i++) {
             if ( cadena.charAt(i) != pila.charAt(0) ) {
                 resultLabel.setText("No es palindromo");
@@ -92,9 +109,11 @@ public class AutomataController implements Initializable {
             }
         }
 
+        //Añadimos el estado final del autómata
         transitions.add(new Estado("F", "\u03B5", "\u03B5"));
 
         resultLabel.setText( "Es palindromo" );
+        animateDiagram();
     }
 
     private void initializeTable() {
@@ -107,12 +126,22 @@ public class AutomataController implements Initializable {
     }
 
     private void drawDiagram(){
-        new Diagrama(canva);
+        diagrama = new Diagrama(canva);
+    }
+
+    private void animateDiagram() {
+        diagrama.animateTransitions(transitions.stream().toList());
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initializeTable();
         drawDiagram();
+    }
+
+    @FXML
+    public void onOutButtonClick(){
+        Stage stage = (Stage) outButton.getScene().getWindow();
+        stage.close();
     }
 }

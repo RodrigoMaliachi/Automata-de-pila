@@ -35,7 +35,7 @@
     </HBox>
    <Label fx:id="resultLabel" />
     <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0">
-        <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="69.0" text="Salir">
+        <Button fx:id="outButton" mnemonicParsing="false" onAction="#onOutButtonClick" prefHeight="26.0" prefWidth="69.0" text="Salir">
            <HBox.margin>
                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
            </HBox.margin>
