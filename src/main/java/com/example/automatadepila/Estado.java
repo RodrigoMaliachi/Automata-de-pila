@@ -1,6 +1,15 @@
 package com.example.automatadepila;
 
-public record Estado(String estado, String cadena, String pila) {
+public final class Estado {
+    private final String estado;
+    private final String cadena;
+    private final String pila;
+
+    public Estado(String estado, String cadena, String pila) {
+        this.estado = estado;
+        this.cadena = cadena;
+        this.pila = pila;
+    }
 
     public String getEstado() {
         return estado;

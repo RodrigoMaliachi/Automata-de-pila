@@ -16,7 +16,8 @@ import java.util.List;
 
 public class Diagrama {
 
-    private enum Eraser { LECTURE, PILE, LECTURE_AND_PILE, STATE_S, STATE_F, TRANSITION_A_S, TRANSITION_B_S, TRANSITION_A_F, TRANSITION_B_F, EMPTY_TRANSITION, NULL}
+    // La clase enum Eraser ayuda a identificar el objeto que debe ser borrado del canvas
+    private enum Eraser { LECTURE, PILE, LECTURE_AND_PILE, STATE_S, STATE_F, TRANSITION_S_A, TRANSITION_S_B, TRANSITION_F_A, TRANSITION_F_B, EMPTY_TRANSITION, NULL }
 
     // pad = Padding : Espacio extra entre el tamaño del canva y el cuadrado
     private final double pad = 0;
@@ -45,30 +46,35 @@ public class Diagrama {
 
     private Timeline timeline;
 
+    private final Color defaultColor = Color.BLACK;
+    private final Color animateColor = Color.BLUE;
+
     public Diagrama(Canvas canva) {
         gc = canva.getGraphicsContext2D();
         drawDiagram();
     }
 
     private void drawDiagram(){
+
+        changeColor(defaultColor);
+
         //Dibuja el cuadrado principal
         gc.strokeRect(pad,pad,wS,hS);
-//        gc.fillRect(pad,pad, wS, hS);
 
         //Dibuja los circulos de los estados S y F
-        drawStateS(Color.BLACK);
-        drawStateF(Color.BLACK);
+        drawStateS(defaultColor);
+        drawStateF(defaultColor);
 
         //Dibuja las lineas de transición de los estados S, F y S-F
-        drawTransitionLineS(Color.BLACK);
-        drawTransitionLineF(Color.BLACK);
-        drawTransitionStoF(Color.BLACK);
+        drawTransitionLineS(defaultColor);
+        drawTransitionLineF(defaultColor);
+        drawTransitionStoF(defaultColor);
 
         //Escribe los textos de las transiciones
-        writeOptionAStateS(Color.BLACK);
-        writeOptionBStateS(Color.BLACK);
-        writeOptionAStateF(Color.BLACK);
-        writeOptionBStateF(Color.BLACK);
+        writeOptionAStateS(defaultColor);
+        writeOptionBStateS(defaultColor);
+        writeOptionAStateF(defaultColor);
+        writeOptionBStateF(defaultColor);
     }
 
     private void drawStateS(Paint paint) {
@@ -155,107 +161,142 @@ public class Diagrama {
 
     public void animateTransitions(List<Estado> transitions) {
 
+        //Se inicializa el contador de las transiciones en 0 para comenzar una nueva animación
         counter = 0;
 
-        if (timeline != null)
-            timeline.stop();
-
+        //Animación de "Lectura de la cadena"
         KeyFrame lectureFrame = new KeyFrame(Duration.seconds(1), e -> {
 
-            redrawTransition(lastTransition, Color.BLACK);
+            //Se redibuja el último objeto animado del diagrama
+            //Sirve para limpiar el diagrama cuando se introduce una nueva palabra palindroma
+            redrawTransition(lastTransition, defaultColor);
 
+            //Se borra el texto de "Lectura de cadena" y "Pila"
             cleanUpObject(Eraser.LECTURE_AND_PILE);
-            writeStringLecture(transitions.get(counter).getCadena(), Color.BLUE);
 
+            //Se escribe el texto de "Lectura de cadena" en azul
+            writeStringLecture(transitions.get(counter).getCadena(), animateColor);
+
+            //Si es el estado inicial, la pila se muestra vacia en señal de que aún no está inicializada
             if (counter == 0)
-                writePileValue("", Color.BLACK);
-            else
-                writePileValue(transitions.get(counter-1).getPila(), Color.BLACK);
+                writePileValue("", defaultColor);
+            else //Sino, escribe el contenido de la pila en el estado anterior
+                writePileValue(transitions.get(counter-1).getPila(), defaultColor);
 
         });
 
+        //Animación de "Pila"
         KeyFrame pileFrame = new KeyFrame(Duration.seconds(2), e -> {
 
+            //Se borra el texto de "Lectura de cadena" y "Pila"
             cleanUpObject(Eraser.LECTURE_AND_PILE);
-            writeStringLecture(transitions.get(counter).getCadena(), Color.BLACK);
-            writePileValue(transitions.get(counter).getPila(), Color.BLUE);
+
+            //Se escribe el texto de "Lectura de cadena" en negro
+            writeStringLecture(transitions.get(counter).getCadena(), defaultColor);
+
+            //Se escribe el texto de "Pila" en azul
+            writePileValue(transitions.get(counter).getPila(), animateColor);
 
         });
 
+        //Animación del Estado (S o F)
         KeyFrame stateFrame = new KeyFrame(Duration.seconds(3), e -> {
 
+            //Se limpia el texto de "Pila" y se vuelve a escribir en negro
             cleanUpObject(Eraser.PILE);
-            writePileValue(transitions.get(counter).getPila(), Color.BLACK);
+            writePileValue(transitions.get(counter).getPila(), defaultColor);
 
-            if (transitions.get(counter).getEstado().equals("S") || counter == transitions.size()/2 - 1) {
+            //Redibuja el estado correspondiente en color azul
+            if (transitions.get(counter).getEstado().equals("S")) {
                 cleanUpObject(Eraser.STATE_S);
-                drawStateS(Color.BLUE);
-                drawTransitionLineS(Color.BLACK);
+                drawStateS(animateColor);
+                drawTransitionLineS(defaultColor);
             } else {
                 cleanUpObject(Eraser.STATE_F);
-                drawStateF(Color.BLUE);
-                drawTransitionLineF(Color.BLACK);
+                drawStateF(animateColor);
+                drawTransitionLineF(defaultColor);
             }
 
         });
 
+        //Animación de las lineas y textos de transición
         KeyFrame transitionFrame = new KeyFrame(Duration.seconds(4), e -> {
 
+            //Se combina el estado con la primera letra de la cadena restante para definir la transición
             String option = transitions.get(counter).getEstado() + transitions.get(counter).getCadena().charAt(0);
 
+            //Se actualiza lastTransition con una opción de Eraser
             lastTransition = switch (option) {
-                case "Sa" -> Eraser.TRANSITION_A_S;
-                case "Sb" -> Eraser.TRANSITION_B_S;
-                case "Fa" -> Eraser.TRANSITION_A_F;
-                case "Fb" -> Eraser.TRANSITION_B_F;
+                case "Sa" -> Eraser.TRANSITION_S_A;
+                case "Sb" -> Eraser.TRANSITION_S_B;
+                case "Fa" -> Eraser.TRANSITION_F_A;
+                case "Fb" -> Eraser.TRANSITION_F_B;
                 default -> Eraser.NULL;
             };
 
+            //Si el contador está a la mitad, entonces es la transición del estado S al F
             if (counter == transitions.size() / 2 - 1)
                 lastTransition = Eraser.EMPTY_TRANSITION;
-            if (counter != transitions.size() - 1)
-                redrawTransition(lastTransition, Color.BLUE);
-            else
-                redrawTransition(lastTransition, Color.BLACK);
 
-            if (++counter >= transitions.size()) {
-                counter = 0;
-            }
+            //La transición se anima solo si no es la última transición
+            if (counter != transitions.size() - 1)
+                redrawTransition(lastTransition, animateColor);
+            else
+                redrawTransition(lastTransition, defaultColor);
+
+            counter = (counter + 1) % transitions.size();
         });
-        
-        timeline = new Timeline(lectureFrame, pileFrame, stateFrame, transitionFrame);
-        timeline.setCycleCount(Animation.INDEFINITE);
+
+        if (timeline != null) {
+
+            //Si el timeline ya existe, se detiene para eliminar los antiguos KeyFrames y añadir los nuevos
+            timeline.stop();
+            timeline.getKeyFrames().clear();
+            timeline.getKeyFrames().addAll(lectureFrame, pileFrame, stateFrame, transitionFrame);
+
+        } else {
+
+            //Sino, se crea una nueva instancia de timeline
+            timeline = new Timeline(lectureFrame, pileFrame, stateFrame, transitionFrame);
+
+            //Hace que la animación no se detenga
+            timeline.setCycleCount(Animation.INDEFINITE);
+
+        }
+
         timeline.play();
     }
 
     private void redrawTransition(Eraser transition, Paint paint) {
 
+        //Se limpia el área donde está el objeto
         cleanUpObject(transition);
 
+        //Se dibuja el objeto con el color deseado
         switch (transition) {
-            case TRANSITION_A_S -> {
+            case TRANSITION_S_A -> {
                 drawTransitionLineS(paint);
-                drawStateS(Color.BLACK);
+                drawStateS(defaultColor);
                 writeOptionAStateS(paint);
             }
-            case TRANSITION_B_S -> {
+            case TRANSITION_S_B -> {
                 drawTransitionLineS(paint);
-                drawStateS(Color.BLACK);
+                drawStateS(defaultColor);
                 writeOptionBStateS(paint);
             }
-            case TRANSITION_A_F -> {
+            case TRANSITION_F_A -> {
                 drawTransitionLineF(paint);
-                drawStateF(Color.BLACK);
+                drawStateF(defaultColor);
                 writeOptionAStateF(paint);
             }
-            case TRANSITION_B_F -> {
+            case TRANSITION_F_B -> {
                 drawTransitionLineF(paint);
-                drawStateF(Color.BLACK);
+                drawStateF(defaultColor);
                 writeOptionBStateF(paint);
             }
             case EMPTY_TRANSITION -> {
-                drawStateS(Color.BLACK);
-                drawTransitionLineS(Color.BLACK);
+                drawStateS(defaultColor);
+                drawTransitionLineS(defaultColor);
                 drawTransitionStoF(paint);
             }
             case NULL -> {
@@ -266,29 +307,29 @@ public class Diagrama {
     }
 
     private void cleanUpObject(Eraser option) {
-        
+        //Limpia el área del objeto correspondiente
         switch (option) {
             case LECTURE -> gc.clearRect(pad + 1, pad + 10, wS - 2, 25);
             case PILE -> gc.clearRect(pad + 1, pad + hS - 65, wS - 2, 25);
             case LECTURE_AND_PILE -> {
-                gc.clearRect(pad + 1, pad + 10, wS - 2, 25);
-                gc.clearRect(pad + 1, pad + hS - 65, wS - 2, 25);
+                cleanUpObject(Eraser.LECTURE);
+                cleanUpObject(Eraser.PILE);
             }
             case STATE_S -> gc.clearRect(pad + 20,pad + hS/2 - cD, cD, 3*cD/2 );
             case NULL, STATE_F -> gc.clearRect(pad + wS - 3*cD/4 - 20,pad + hS/2 - cD, cD, 3*cD/2 );
-            case TRANSITION_A_S -> {
+            case TRANSITION_S_A -> {
                 cleanUpObject(Eraser.STATE_S);
                 gc.clearRect(pad + 5, pad + hS/2 - 55, 30, 25);
             }
-            case TRANSITION_B_S -> {
+            case TRANSITION_S_B -> {
                 cleanUpObject(Eraser.STATE_S);
                 gc.clearRect(pad + 45, pad + hS/2 - 55, 30, 25);
             }
-            case TRANSITION_A_F -> {
+            case TRANSITION_F_A -> {
                 cleanUpObject(Eraser.STATE_F);
                 gc.clearRect(pad + wS - cD - 35, pad + hS/2 - 55, 30, 25);
             }
-            case TRANSITION_B_F -> {
+            case TRANSITION_F_B -> {
                 cleanUpObject(Eraser.STATE_F);
                 gc.clearRect(pad + wS - cD + 5, pad + hS/2 - 55, 30, 25);
             }
@@ -300,6 +341,7 @@ public class Diagrama {
     }
 
     private void writeStringLecture(String cadena, Paint paint) {
+        //Escribe el texto de "Lectura de cadena"
         changeColor(paint);
         alignTextToCenter();
         gc.fillText("Lectura de la cadena:", pad + wS/2, pad + 15);
@@ -307,6 +349,7 @@ public class Diagrama {
     }
 
     private void writePileValue(String pila, Paint paint) {
+        //Escribe el texto de "Pila"
         changeColor(paint);
         alignTextToCenter();
         gc.fillText("Pila:", pad + wS/2, pad + hS - 60);
@@ -326,5 +369,13 @@ public class Diagrama {
     private void changeColor(Paint paint) {
         gc.setStroke(paint);
         gc.setFill(paint);
+    }
+
+    public void stopAnimation() {
+        if (timeline != null) {
+            timeline.stop();
+            gc.clearRect(pad,pad,wS,hS);
+            drawDiagram();
+        }
     }
 }

@@ -39,6 +39,7 @@ public class AutomataController implements Initializable {
 
     @FXML
     protected void onContinueButtonClick() {
+
         String cadena = cadenaTextField.getText();
         resultLabel.setText("");
         cadenaTextField.setText("");
@@ -53,27 +54,38 @@ public class AutomataController implements Initializable {
         for (char letra : cadena.toCharArray()) {
             if (letra != 'a' && letra != 'b') {
                 resultLabel.setText("Solo se permite palabras con a y b");
+                stopAnimation();
+                transitions.clear();
                 return;
             }
         }
 
         if (cadena.length() % 2 != 0) {
             resultLabel.setText("La cadena debe ser de longitud par");
+            stopAnimation();
+            transitions.clear();
             return;
         }
 
         addTransitionsToTable(cadena);
     }
 
-    private void emptyEntry() {
+    private void stopAnimation() {
+        if (diagrama != null)
+            diagrama.stopAnimation();
+    }
+
+    private void emptyEntry() { //La cadena vacía cuenta como palindromo
         transitions.clear();
         transitions.add(new Estado("S","\u03B5","\u03B5"));
         transitions.add(new Estado("F","\u03B5","\u03B5"));
+        resultLabel.setText("Es palíndromo");
         animateDiagram();
     }
 
     private void addTransitionsToTable(String cadena) {
 
+        boolean isPalindrome = true;
         int length = cadena.length();
         String pila = "";
 
@@ -100,28 +112,49 @@ public class AutomataController implements Initializable {
         //Añadimos las transiciones del estado F
         for (int i = length/2; i < length; i++) {
             if ( cadena.charAt(i) != pila.charAt(0) ) {
-                resultLabel.setText("No es palindromo");
-                return;
+                isPalindrome = false;
+                pila = cadena.charAt(i) + pila;
             }
 
-            if (pila.length() > 1) {
-                pila = pila.substring(1);
-                transitions.add(new Estado("F", cadena.substring(i+1), pila));
+            pila = pila.substring(1);
+
+            if (cadena.substring(i+1).length() > 0) {
+                transitions.add(
+                        new Estado(
+                                "F",
+                                cadena.substring(i+1),
+                                pila
+                        )
+                );
+            } else {
+                transitions.add(
+                        new Estado(
+                                "F",
+                                "\u03B5",
+                                pila.isBlank() ? "\u03B5" : pila
+                        )
+                );
             }
         }
 
-        //Añadimos el estado final del autómata
-        transitions.add(new Estado("F", "\u03B5", "\u03B5"));
+        if (isPalindrome)
+            resultLabel.setText( "Es palíndromo" );
+        else
+            resultLabel.setText("No es palíndromo");
 
-        resultLabel.setText( "Es palindromo" );
         animateDiagram();
     }
 
     private void initializeTable() {
+
+        //Al chile no sé para que sirve esto, pero si se lo quito no se ven las palabras en la tabla
         estadoColumn.setCellValueFactory(new PropertyValueFactory<>("estado"));
         cadenaColumn.setCellValueFactory(new PropertyValueFactory<>("cadena"));
         pilaColumn.setCellValueFactory(new PropertyValueFactory<>("pila"));
+        //Solo sé que las instancias del PropertyValueFactory tienen en el constructor los identificadores de las
+        //propiedades de la clase Estado
 
+        //Se añade la lista observable de los estados a la tabla
         transitions = FXCollections.observableArrayList();
         tableView.setItems(transitions);
     }
